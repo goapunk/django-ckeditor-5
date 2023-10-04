@@ -1,3 +1,5 @@
+import os
+
 from django import get_version
 from django.http import Http404
 from django.utils.module_loading import import_string
@@ -11,6 +13,7 @@ from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
 from django.http import JsonResponse
 from PIL import Image
+import uuid
 
 from .forms import UploadFileForm
 
@@ -52,20 +55,26 @@ def image_verify(f):
         raise NoImageException
 
 
-def handle_uploaded_file(f):
+def handle_uploaded_file(user, f):
     fs = storage()
-    filename = fs.save(f.name, f)
+    path = f.name
+    if getattr(settings, "CKEDITOR_5_PATH_FROM_USERNAME", False):
+        path = storage.get_available_name(os.path.join(user.username, f.name))
+    filename = fs.save(path, f)
     return fs.url(filename)
 
 
 def upload_file(request):
     if request.method == "POST" and request.user.is_staff:
         form = UploadFileForm(request.POST, request.FILES)
-        try:
-            image_verify(request.FILES["upload"])
-        except NoImageException as ex:
-            return JsonResponse({"error": {"message": f"{ex}"}})
+        allow_all_file_types = getattr(settings, "CKEDITOR_5_ALLOW_ALL_FILE_TYPES", False)
+
+        if not allow_all_file_types:
+            try:
+                image_verify(request.FILES['upload'])
+            except NoImageException as ex:
+                return JsonResponse({"error": {"message": f"{ex}"}})
         if form.is_valid():
-            url = handle_uploaded_file(request.FILES["upload"])
+            url = handle_uploaded_file(request.user, request.FILES["upload"])
             return JsonResponse({"url": url})
     raise Http404(_("Page not found."))
