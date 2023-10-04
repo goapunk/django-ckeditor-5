@@ -13,7 +13,6 @@ from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
 from django.http import JsonResponse
 from PIL import Image
-import uuid
 
 from .forms import UploadFileForm
 

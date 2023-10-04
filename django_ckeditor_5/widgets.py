@@ -3,6 +3,7 @@ from django.conf import settings
 from django.forms.renderers import get_default_renderer
 from django.urls import reverse
 from django.utils.safestring import mark_safe
+import json
 
 if get_version() >= "4.0":
     from django.utils.translation import gettext_lazy as _
@@ -69,6 +70,11 @@ class CKEditor5Widget(forms.Widget):
         context["config"] = self.config
         context["script_id"] = "{}{}".format(attrs["id"], "_script")
         context["upload_url"] = reverse("ck_editor_5_upload_file")
+        context["upload_file_types"] = json.dumps(getattr(
+            settings,
+            "CKEDITOR_5_UPLOAD_FILE_TYPES",
+            [".pdf"]
+        ))
         context["csrf_cookie_name"] = settings.CSRF_COOKIE_NAME
         if self._config_errors:
             context["errors"] = ErrorList(self._config_errors)
