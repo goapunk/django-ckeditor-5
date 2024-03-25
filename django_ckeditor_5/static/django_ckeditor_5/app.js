@@ -2,7 +2,7 @@ import ClassicEditor from './src/ckeditor';
 import './src/override-django.css';
 
 
-let editors = [];
+let editors = {};
 
 function getCookie(name) {
     let cookieValue = null;
@@ -89,15 +89,18 @@ function createEditors(element = document.body) {
                 wordCountWrapper.innerHTML = '';
                 wordCountWrapper.appendChild(wordCountPlugin.wordCountContainer);
             }
-            editors.push(editor);
+            editors[editorEl.id] = editor;
+            if (window.ckeditorCallbacks && window.ckeditorCallbacks[editorEl.id]) {
+                    window.ckeditorCallbacks[editorEl.id](editor);
+                }
         }).catch(error => {
             console.error((error));
         });
         editorEl.setAttribute('data-processed', '1');
     });
-
     window.editors = editors;
     window.ClassicEditor = ClassicEditor;
+    window.ckeditorCreateTemplate = createTemplate;
 }
 
 /**
@@ -114,6 +117,11 @@ function getAddedNodes(recordList) {
     return recordList
         .flatMap(({ addedNodes }) => Array.from(addedNodes))
         .filter(node => node.nodeType === 1);
+}
+
+
+function createTemplate(config, id, upload_url, csrf_cookie_name) {
+    return `<div><div class="ck-editor-container"><textarea id="${id}" class="django_ckeditor_5"></textarea>\n<span class="word-count" id="${id}_script-word-count"></div></span><input type="hidden" id="${id}_script-ck-editor-5-upload-url" data-upload-url="${upload_url}" data-csrf_cookie_name=${csrf_cookie_name}"/><span id="${id}_script-span"><script id="${id}_script" type="application/json">${config}</script></span></div>`
 }
 
 document.addEventListener("DOMContentLoaded", () => {

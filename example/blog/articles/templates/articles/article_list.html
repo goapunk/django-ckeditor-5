@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load ckeditor_config %}
 {% block content %}
     <h1>Articles</h1>
     <div style="display:flex; flex-direction: column;">
@@ -15,21 +16,24 @@
 
     {# scripts to handle editor behavior #}
     {{media}}
+    {{ config|json_script:"config-base"}}
     <script>
         const wrapper = document.getElementById('dynamicEditor');
+        let form_counter = 0;
+        const config = document.getElementById('config-base').textContent
+        const upload_url = "https://test.de"
+        const csrf_cookie_name = "csrf_cookie"
 
         function create_article(){
-            fetch("{% url 'get-editor' %}")
-            .then(response => {
-                if (!response.ok) {
-                throw new Error('Network response was not ok');
-                }
-                return response.text();
-            })
-            .then(html => {
-                wrapper.innerHTML = html;
-            })
-            .catch(error => console.error('Request error:', error));
+            console.log("test")
+            const id = "id_text_" + form_counter++
+            if (!window.ckeditorCallbacks) {
+                window.ckeditorCallbacks = {}
+            }
+            window.ckeditorCallbacks[id] = function(editor){
+                console.log("created" + id)
+            }
+            wrapper.insertAdjacentHTML("beforeend", window.ckeditorCreateTemplate(config, id, upload_url, csrf_cookie_name))
         }
         function dispose(){
             wrapper.innerHTML = "";

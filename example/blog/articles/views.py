@@ -1,8 +1,10 @@
+import json
 from django.http import HttpResponseRedirect
 from django.urls import reverse
 from django.views.generic import CreateView, FormView, TemplateView
 from django.views.generic.detail import DetailView
 from django.views.generic.list import ListView
+from django_ckeditor_5.widgets import CKEditor5Widget
 
 from .forms import ArticleForm, CommentForm
 from .models import Article
@@ -13,7 +15,7 @@ class ArticleListView(ListView):
 
     model = Article
     paginate_by = 100
-    extra_context = {"media": CommentForm().media}
+    extra_context = {"media": CommentForm().media, "config": CKEditor5Widget(config_name="extends").config}
 
 
 class ArticleDetailView(DetailView, FormView):
